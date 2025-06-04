@@ -1,0 +1,168 @@
+**Comprehensive AI Penetration Testing Methodology (Enhanced)**
+
+---
+
+### ✨ Executive Summary
+
+This document outlines a robust, multi-environment AI penetration testing methodology tailored for Hybrid (Azure + On-Prem), Azure Cloud, and Local AI systems. It includes detailed phases, tools, risks, and critical scenario validations to simulate real-world attack paths, with updated tooling and a risk-prioritized checklist.
+
+---
+
+## I. Hybrid AI Systems Methodology
+
+**(Azure + On-Prem Agents)**
+
+### A. Unique Risks
+
+* MCP protocol vulnerabilities
+* Unsanitized cloud → local data flows
+* Cross-layer trust boundary exploits
+* Data provenance failures
+
+### B. Testing Phases
+
+| Phase          | Focus Area                        | Tools                         |
+| -------------- | --------------------------------- | ----------------------------- |
+| Recon          | Map MCP channels & APIs           | nmap, Burp Suite              |
+| Enumeration    | Orchestration logic mapping       | Azure CLI, jwt.io             |
+| Vuln Discovery | Prompt injection across agents    | LLMFuzzer, truffleHog         |
+| Exploitation   | Inter-agent instruction hijacking | mitmproxy, custom payloads    |
+| Post-Exploit   | Cloud ↔ Local lateral movement    | Cobalt Strike, Sysmon, Auditd |
+
+### C. Critical Scenarios
+
+* **MCP Security**
+  *Test:* Capture traffic with Wireshark
+  *Validation:* All comms encrypted/authenticated
+
+* **Cloud Output Sanitization**
+  *Test:* Inject payloads via Azure OpenAI
+  *Validation:* No unsafe content reaches local agents
+
+* **Fallback Model Bypass**
+  *Test:* Disable primary model via injection
+  *Validation:* Fallback enforces primary policies
+
+---
+
+## II. Azure AI Systems Methodology
+
+**(Cloud-Exclusive Environments)**
+
+### A. Unique Risks
+
+* Azure AD token validation gaps
+* Logic App workflow exploits
+* Key Vault misconfigurations
+* Prompt logging in App Insights
+
+### B. Testing Phases
+
+| Phase          | Focus Area                     | Tools                    |
+| -------------- | ------------------------------ | ------------------------ |
+| Recon          | Find public Azure AI endpoints | AZScanner, Shodan        |
+| Enumeration    | Azure AD roles & scopes        | Stormspotter, BloodHound |
+| Vuln Discovery | Prompt leaks in Log Analytics  | MicroBurst, ScoutSuite   |
+| Exploitation   | Token theft → data access      | Burp Suite, Postman      |
+| Post-Exploit   | Chained model → email triggers | Azure Monitor logs       |
+
+### C. Critical Scenarios
+
+* **Azure OpenAI Injection**
+  *Test:* promptinject with 10+ vectors
+  *Validation:* Payloads blocked by filters
+
+* **Key Vault Hygiene**
+  *Test:* Inspect secrets rotation
+  *Validation:* No plaintext keys in repos
+
+* **Logic App Exploits**
+  *Test:* Malicious input triggers workflow
+  *Validation:* No unauthorized actions occur
+
+---
+
+## III. Local AI Systems Methodology
+
+**(Private/On-Prem Hosting)**
+
+### A. Unique Risks
+
+* Exposed inference endpoints
+* Model weight tampering
+* Hardcoded secrets in configs
+* Data poisoning and model backdoors
+
+### B. Testing Phases
+
+| Phase          | Focus Area                   | Tools                       |
+| -------------- | ---------------------------- | --------------------------- |
+| Recon          | Find FastAPI/Flask endpoints | nmap, Masscan               |
+| Enumeration    | Model fingerprinting         | LinPEAS, PSInspector        |
+| Vuln Discovery | .env credential leaks        | truffleHog, manual review   |
+| Exploitation   | Model binary overwrites      | File integrity checks, YARA |
+| Post-Exploit   | Shell command chaining       | Custom fuzzers, Langfuse    |
+
+### C. Critical Scenarios
+
+* **Container Escape**
+  *Test:* Privilege escalation attempts
+  *Validation:* Agents can't break Docker/K8s
+
+* **Model Tampering**
+  *Test:* Checksum verification
+  *Validation:* No unauthorized .bin/.safetensors changes
+
+* **Secret Leakage**
+  *Test:* Scan .env/config.yaml
+  *Validation:* Zero plaintext secrets/logs
+
+---
+
+## IV. Consolidated Tools Matrix
+
+| Function           | Hybrid         | Azure             | Local             |
+| ------------------ | -------------- | ----------------- | ----------------- |
+| Recon              | amass, Burp    | AZScanner, Shodan | nmap, Masscan     |
+| Injection          | LLMFuzzer      | promptinject      | Custom fuzzers    |
+| Secrets            | truffleHog     | MicroBurst        | grep, truffleHog  |
+| Exploit            | mitmproxy      | Postman           | File tampering    |
+| Monitoring         | Sysmon, Auditd | Azure Monitor     | Elastic, Tripwire |
+| Audit/Traceability | Langfuse       | Purview           | Tripwire          |
+
+---
+
+## V. Environment-Specific Checklist (Risk-Prioritized)
+
+| Check                                           | Environment | Priority |
+| ----------------------------------------------- | ----------- | -------- |
+| MCP traffic encrypted and authenticated         | Hybrid      | High     |
+| Cloud outputs sanitized before local processing | Hybrid      | High     |
+| Fallback models enforce primary policies        | Hybrid      | High     |
+| Telemetry monitored for leakage                 | Hybrid      | Medium   |
+| Agent permissions follow least privilege        | Hybrid      | High     |
+| Azure AD tokens scoped and validated            | Azure       | High     |
+| Key Vault secrets rotated quarterly             | Azure       | Medium   |
+| Defender alerts for AI inputs/outputs           | Azure       | Medium   |
+| Logic Apps sanitize AI content                  | Azure       | High     |
+| Blob containers not public                      | Azure       | High     |
+| Model binaries write-protected                  | Local       | High     |
+| Agents in Docker/VM isolation                   | Local       | High     |
+| Zero secrets in config files                    | Local       | High     |
+| Redis/local caches encrypted                    | Local       | Medium   |
+| Admin UIs password-protected                    | Local       | High     |
+
+---
+
+## 🔍 Glossary (Select Terms)
+
+* **MCP**: Multi-Channel Processing
+* **LLMFuzzer**: Prompt fuzzing tool for LLMs
+* **Langfuse**: Observability for LLM applications
+* **Purview**: Microsoft data governance tool
+* **Tripwire**: File integrity monitoring
+* **promptinject**: A CLI prompt injection testing utility
+
+---
+
+*Version: Enhanced | Last Updated: 2025-06*
