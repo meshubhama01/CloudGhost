@@ -1,0 +1,150 @@
+### **API5: Broken Function Level Authorization**
+
+**Goal:** Detect privilege escalation via restricted endpoints.
+
+**Test Cases:**
+1. Identify admin-only endpoints.
+2. Attempt access with lower-privileged user token.
+3. Test with no token.
+
+**Burp Config:**
+- Repeater → request modification.
+
+**Decision Tree:**
+[Can Low-Priv User Access Admin Endpoint?]
+/
+Yes No
+| |
+Report High Confirm Restriction
+Severity
+
+yaml
+Copy
+Edit
+
+**Verification:**
+- Try multiple admin endpoints.
+
+---
+
+### **API6: Mass Assignment**
+
+**Goal:** Detect if hidden parameters can be bound automatically.
+
+**Test Cases:**
+1. Add new fields in JSON body.
+2. Attempt to set values not in UI.
+3. Observe if changes take effect.
+
+---
+
+### **API7: Security Misconfiguration**
+
+**Goal:** Identify weak TLS, headers, CORS.
+
+**Tenable Config:**
+- Web App Scan → enable TLS, HTTP header, CORS checks.
+
+**Burp Config:**
+- Target → Issues tab.
+
+---
+
+### **API8: Injection (SQLi, NoSQLi, Command)**
+
+**Goal:** Detect code execution or data exposure.
+
+**Tenable Config:**
+- Enable injection plugins.
+
+**Burp Config:**
+- Intruder with payload lists.
+- Use Collaborator for SSRF/XXE.
+
+---
+
+### **API9: Improper Inventory Management**
+
+**Goal:** Discover undocumented endpoints.
+
+**Burp Config:**
+- Intruder → wordlists from SecLists/api.txt.
+
+---
+
+### **API10: Unsafe Consumption of APIs**
+
+**Goal:** Detect unsafe trust in 3rd-party APIs.
+
+**Test Cases:**
+- Modify 3rd-party API responses and observe processing.
+
+---
+
+## 5. Verification & Retesting
+- Re-run failing cases after fix.
+- Confirm no regression in other endpoints.
+- Document before/after evidence.
+
+---
+
+## 6. Risk Rating
+| Severity | CVSS Base Score | OWASP Risk Rating |
+|----------|----------------|-------------------|
+| Critical | 9.0–10.0        | Very High         |
+| High     | 7.0–8.9         | High              |
+| Medium   | 4.0–6.9         | Medium            |
+| Low      | 0.1–3.9         | Low               |
+
+---
+
+## 7. External Payload References
+1. https://github.com/swisskyrepo/PayloadsAllTheThings  
+2. https://github.com/danielmiessler/SecLists  
+3. https://github.com/assetnote/wordlists  
+4. https://github.com/ticarpi/jwt_tool  
+5. https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/GraphQL  
+6. https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/SSRF  
+7. https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/XXE%20Injection  
+8. https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/NoSQL%20Injection  
+9. https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/Command%20Injection  
+10. https://github.com/fuzzdb-project/fuzzdb  
+
+---
+
+## 8. Reporting Template
+**Finding ID**: APIx-[Number]  
+**Title:** Short description  
+**Description:** Detailed technical explanation  
+**Affected Endpoint:** URL, method  
+**PoC:** Request/Response evidence  
+**Impact:** Business & security impact  
+**Recommendation:** Dev-focused fix steps  
+**References:** OWASP, CWE, ASVS
+
+---
+
+## 9. Post-Test Final Checklist
+- [ ] All OWASP API Top 10 tested.
+- [ ] Tenable & Burp logs archived.
+- [ ] Evidence stored securely.
+- [ ] Report reviewed and approved.
+
+---
+
+# Quick Reference Cheat Sheet
+
+| OWASP ID | Test Action | Burp Suite Usage | Tenable Usage | Expected Pass/Fail Outcome |
+|----------|------------|-----------------|--------------|---------------------------|
+| API1 BOLA | Modify object ID in URL/body | Repeater → edit ID | Manual only | Fail if another user's data is returned |
+| API2 Broken Auth | Use expired token | JWT Editor → modify token | Manual only | Fail if API accepts expired token |
+| API3 Property Auth | Add hidden JSON fields | Repeater → add `"isAdmin": true` | Manual only | Fail if API applies change |
+| API4 Resource | Flood endpoint | Intruder → Cluster Bomb | Manual only | Fail if no HTTP 429 |
+| API5 Function Auth | Access admin endpoint with user token | Repeater → change URL | Manual only | Fail if endpoint is accessible |
+| API6 Mass Assignment | Send extra JSON parameters | Repeater | Manual only | Fail if parameters applied |
+| API7 Misconfig | Check headers/TLS | Target → Issues | Enable TLS/header checks | Fail if weak TLS or missing headers |
+| API8 Injection | Insert `' OR 1=1--` | Intruder | Enable injection plugins | Fail if injection successful |
+| API9 Inventory | Fuzz endpoints | Intruder → API wordlists | Manual only | Fail if undocumented endpoints found |
+| API10 Unsafe Consumption | Alter 3rd-party API responses | Repeater | Manual only | Fail if API trusts modified data |
+
+---
