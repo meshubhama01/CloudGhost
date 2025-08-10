@@ -1,3 +1,213 @@
+# Comprehensive API Security Assessment Methodology
+*Aligned with OWASP API Security Top 10, Tenable, Burp Suite*
+
+---
+
+## 1. Purpose & Scope
+This methodology provides a **repeatable, detailed, and time-efficient** process for testing APIs against OWASP API Security Top 10 risks.  
+The goal is to enable junior testers to conduct complete assessments independently using **Tenable** and **Burp Suite** (with optional free tools if strictly necessary).
+
+---
+
+## 2. Pre-Engagement Phase
+
+### Objectives
+- Define scope, permissions, and limitations.
+- Prepare accounts, tools, and documentation.
+- Ensure a legal and safe testing environment.
+
+### Checklist
+- [ ] Obtain signed Rules of Engagement (ROE)
+- [ ] Confirm allowed API domains, IPs, base paths
+- [ ] Obtain at least 3 user roles: regular, elevated, admin
+- [ ] Install Burp Suite CA certificate on test client
+- [ ] Update Tenable plugins and Burp Suite extensions
+- [ ] Gather API documentation (Swagger, Postman collections)
+
+---
+
+## 3. Testing Framework
+
+We test each OWASP API Top 10 risk with:
+1. **Test Goals** — what to detect.
+2. **Test Cases** — step-by-step instructions.
+3. **Decision Tree** — actions based on results.
+4. **Tool Config** — Burp/Tenable usage.
+5. **Verification** — confirming vulnerabilities.
+6. **Sample Report Entry** — template for documentation.
+
+---
+
+## 4. Detailed Testing Procedures
+
+---
+
+### **API1: Broken Object Level Authorization (BOLA)**
+
+**Goal:** Detect cases where object IDs can be manipulated to access other users' data.
+
+**Test Cases:**
+1. Intercept requests and identify numeric/string object IDs.
+2. Replace with IDs of another valid object.
+3. Observe API response.
+4. Attempt predictable ID sequences (e.g., +1, -1).
+5. Test with unauthorized tokens.
+
+**Burp Config:**
+- Use **Proxy** to intercept requests.
+- Send to **Repeater**, modify ID in path/query/body.
+- Observe status codes & returned data.
+
+**Tenable Config:**
+- Not applicable — manual testing required.
+
+**Decision Tree:**
+  [Identify Object ID?]
+         |
+        No --> Stop Test
+         |
+        Yes
+         |
+[Change ID → Get Other User Data?]
+/
+Yes No
+| |
+Report High Test Other IDs
+Severity & Token Variants
+
+markdown
+Copy
+Edit
+
+**Verification:**
+- Repeat test with multiple IDs to confirm pattern.
+- Ensure no caching artifacts are involved.
+
+**Sample Report Entry:**
+- **Title:** BOLA in `/api/v1/user/{id}`
+- **Description:** User can access other users' profiles by modifying `id` parameter.
+- **Impact:** Exposure of sensitive user data.
+- **Recommendation:** Enforce server-side authorization checks for each object.
+
+### **API2: Broken Authentication**
+
+**Goal:** Detect flaws in token/session handling.
+
+**Test Cases:**
+1. Send request without token.
+2. Send with expired token.
+3. Modify JWT payload (role escalation).
+4. Change JWT `alg` to `none`.
+
+**Burp Config:**
+- Install **JWT Editor** extension.
+- Modify and replay tokens.
+- Use Repeater to test token variations.
+
+**Tenable Config:**
+- Not applicable — manual testing required.
+
+**Decision Tree:**
+pgsql
+Copy
+Edit
+[Valid Token Required?]
+      |
+     No --> Report Critical
+      |
+     Yes
+      |
+[Can Invalid/Expired Token Pass?]
+/
+Yes No
+| |
+Report High Confirm No Bypass
+Severity
+
+markdown
+Copy
+Edit
+
+**Verification:**
+- Use multiple user roles for testing.
+- Validate server logs (if accessible).
+
+**Sample Report Entry:**
+- **Title:** Token Validation Bypass
+- **Description:** API accepts expired JWT tokens.
+- **Impact:** Allows unauthorized access.
+- **Recommendation:** Enforce strict token expiry and signature checks.
+
+---
+
+### **API3: Broken Object Property Level Authorization**
+
+**Goal:** Detect access to restricted object properties.
+
+**Test Cases:**
+1. Identify JSON properties in responses.
+2. Add hidden fields (`isAdmin`, `role`) in requests.
+3. Attempt to update protected fields.
+
+**Burp Config:**
+- Use Repeater to modify JSON request bodies.
+
+**Decision Tree:**
+[Can Add/Modify Hidden Properties?]
+/
+Yes No
+| |
+Report High Confirm No Bypass
+Severity
+
+markdown
+Copy
+Edit
+
+**Verification:**
+- Ensure changes persist after API response.
+
+**Sample Report Entry:**
+- **Title:** Unauthorized Property Modification
+- **Description:** User can set `isAdmin` field to `true` via API.
+- **Impact:** Privilege escalation.
+- **Recommendation:** Implement server-side property filtering.
+
+---
+
+### **API4: Unrestricted Resource Consumption**
+
+**Goal:** Detect missing rate limits.
+
+**Test Cases:**
+1. Send 100+ rapid requests to same endpoint.
+2. Monitor for HTTP 429 responses.
+3. Check CPU/memory impact on target.
+
+**Burp Config:**
+- Use Intruder → Cluster Bomb → 1000 requests/sec.
+
+**Decision Tree:**
+[Does API Throttle?]
+/
+No Yes
+| |
+Report Med Confirm Limit
+Severity
+
+markdown
+Copy
+Edit
+
+**Verification:**
+- Repeat with different endpoints.
+
+**Sample Report Entry:**
+- **Title:** No Rate Limiting on `/login`
+- **Description:** API accepts unlimited login attempts.
+- **Impact:** Brute force feasible.
+- **Recommendation:** Implement per-IP and per-user rate limiting.
+
 ### **API5: Broken Function Level Authorization**
 
 **Goal:** Detect privilege escalation via restricted endpoints.
